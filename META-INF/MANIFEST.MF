@@ -1,0 +1,14 @@
+Manifest-Version: 1.0
+Bundle-ManifestVersion: 2
+Bundle-Name: ExecMavenHelper
+Bundle-RequiredExecutionEnvironment: JavaSE-21
+Bundle-SymbolicName: za.co.felixsol.eclipse.runmavenhelp.ExecMavenHelper;singleton:=true
+Bundle-Version: 1.0.0.qualifier
+Require-Bundle: org.eclipse.ui,
+ org.eclipse.ui.ide;bundle-version="3.22.300",
+ org.eclipse.core.resources;bundle-version="3.21.0",
+ org.eclipse.core.runtime;bundle-version="3.31.100",
+ org.eclipse.ui.navigator.resources;bundle-version="3.9.400"
+Automatic-Module-Name: CustomCommandTest
+Bundle-ActivationPolicy: lazy
+Bundle-Activator: za.co.felixsol.eclipse.runmavenhelp.handlers.Activator
