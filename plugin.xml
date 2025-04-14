@@ -6,7 +6,7 @@
          point="org.eclipse.ui.commands">
       <category
             id="za.co.felixsol.eclipse.runmavenhelp.category"
-            name="Sample Category">
+            name="Maven Runner Category">
       </category>
       <command
             categoryId="za.co.felixsol.eclipse.runmavenhelp.category"
@@ -15,12 +15,12 @@
       </command>
       <command
             categoryId="za.co.felixsol.eclipse.runmavenhelp.category"
-            name="Maven clean"
+            name="Maven install"
             id="za.co.felixsol.eclipse.runmavenhelp.handlers.MavenInstall">
       </command>
       <command
             categoryId="za.co.felixsol.eclipse.runmavenhelp.category"
-            name="Maven clean"
+            name="Maven clean install"
             id="za.co.felixsol.eclipse.runmavenhelp.handlers.MavenCleanInstall">
       </command>
    </extension>
@@ -65,13 +65,23 @@
       <menuContribution
             locationURI="menu:org.eclipse.ui.main.menu?after=additions">
          <menu
-               id="CustomCommandTest.menus.sampleMenu"
-               label="Sample Menu"
+               id="za.co.felixsol.eclipse.runmavenhelp.menussampleMenu"
+               label="Maven Runner"
                mnemonic="M">
             <command
                   commandId="za.co.felixsol.eclipse.runmavenhelp.handlers.MavenClean"
-                  id="CustomCommandTest.menus.sampleCommand"
-                  mnemonic="S">
+                  id="za.co.felixsol.eclipse.runmavenhelp.menus.cleanCommand"
+                  mnemonic="C">
+            </command>
+            <command
+                  commandId="za.co.felixsol.eclipse.runmavenhelp.handlers.MavenInstall"
+                  id="za.co.felixsol.eclipse.runmavenhelp.menus.installCommand"
+                  mnemonic="I">
+            </command>
+            <command
+                  commandId="za.co.felixsol.eclipse.runmavenhelp.handlers.MavenCleanInstall"
+                  id="za.co.felixsol.eclipse.runmavenhelp.menus.cleanInstallCommand"
+                  mnemonic="X">
             </command>
          </menu>
       </menuContribution>

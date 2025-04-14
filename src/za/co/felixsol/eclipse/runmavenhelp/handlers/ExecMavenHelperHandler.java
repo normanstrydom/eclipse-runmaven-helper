@@ -1,6 +1,7 @@
 package za.co.felixsol.eclipse.runmavenhelp.handlers;
 
 import java.util.Iterator;
+import java.util.Map;
 
 import org.eclipse.core.commands.AbstractHandler;
 import org.eclipse.core.commands.ExecutionEvent;
@@ -31,42 +32,12 @@ public class ExecMavenHelperHandler extends AbstractHandler {
 				.findView("org.eclipse.ui.navigator.ProjectExplorer");
 	}
 
-	public void launchMavenGoals(IProject project) {
+	public void launchMavenGoals(IResource project, String goals) {
 		try {
 			// Get the launch manager
 			ILaunchManager launchManager = DebugPlugin.getDefault().getLaunchManager();
 
-			// Get the Maven launch config type
-			ILaunchConfigurationType mavenType = launchManager
-					.getLaunchConfigurationType("org.eclipse.m2e.Maven2LaunchConfigurationType");
-
-			// Create a working copy
-			String configName = project.getName() + " - clean install";
-			ILaunchConfigurationWorkingCopy workingCopy = mavenType.newInstance(null,
-					launchManager.generateLaunchConfigurationName(configName));
-
-			// Set required attributes
-			workingCopy.setAttribute("org.eclipse.jdt.launching.WORKING_DIRECTORY", project.getLocation().toOSString());
-			workingCopy.setAttribute("org.eclipse.m2e.MAVEN_GOALS", "clean install");
-			workingCopy.setAttribute("org.eclipse.m2e.PROFILES", "");
-			workingCopy.setAttribute("org.eclipse.debug.ui.ATTR_CAPTURE_OUTPUT", true);
-			workingCopy.setAttribute("org.eclipse.m2e.MAVEN_PROJECT_NAME", project.getName());
-
-			// Save and launch
-			ILaunchConfiguration configuration = workingCopy.doSave();
-			configuration.launch(ILaunchManager.RUN_MODE, null);
-
-		} catch (CoreException e) {
-			e.printStackTrace();
-		}
-	}
-
-	public void launchMavenGoals(IResource project) {
-		try {
-			// Get the launch manager
-			ILaunchManager launchManager = DebugPlugin.getDefault().getLaunchManager();
-
-			String configName = "MavenRunHelper - " + project.getProject().getName() + " - clean install";
+			String configName = "MavenRunHelper - " + project.getProject().getName() + " - " + goals;
 
 			ILaunchConfiguration launchConfiguration = null;
 
@@ -113,11 +84,11 @@ public class ExecMavenHelperHandler extends AbstractHandler {
 		}
 	}
 
-	private void processSelection(ExecutionEvent event, ITreeSelection selection, Object selectedItem)
+	private void processSelection(ExecutionEvent event, ITreeSelection selection, Object selectedItem, String goals)
 			throws CoreException {
 		IResource pom = findPomToProcess(event, selection, selectedItem);
 		if (pom != null) {
-			launchMavenGoals(pom);
+			launchMavenGoals(pom,goals);
 		}
 	}
 
@@ -148,6 +119,14 @@ public class ExecMavenHelperHandler extends AbstractHandler {
 
 	@Override
 	public Object execute(ExecutionEvent event) throws ExecutionException {
+		
+		String goals = "install";
+		if (event.getCommand().getId().equals("za.co.felixsol.eclipse.runmavenhelp.handlers.MavenClean")) {
+			goals = "clean";
+		} else if (event.getCommand().getId().equals("za.co.felixsol.eclipse.runmavenhelp.handlers.MavenCleanInstall")) {
+			goals = "clean install";
+		}
+		
 		IViewPart viewPart = getProjectExplorerView();
 		if (viewPart != null) {
 			ISelection selection = viewPart.getSite().getSelectionProvider().getSelection();
@@ -155,7 +134,7 @@ public class ExecMavenHelperHandler extends AbstractHandler {
 				Iterator iterator = ((ITreeSelection) selection).iterator();
 				while (iterator.hasNext()) {
 					try {
-						processSelection(event, (ITreeSelection) selection, iterator.next());
+						processSelection(event, (ITreeSelection) selection, iterator.next(), goals);
 					} catch (CoreException e) {
 						throw new ExecutionException(e.getMessage(), e);
 					}
