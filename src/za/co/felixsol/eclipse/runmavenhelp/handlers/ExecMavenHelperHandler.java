@@ -7,8 +7,14 @@ import org.eclipse.core.commands.ExecutionEvent;
 import org.eclipse.core.commands.ExecutionException;
 import org.eclipse.core.resources.IContainer;
 import org.eclipse.core.resources.IFile;
+import org.eclipse.core.resources.IProject;
 import org.eclipse.core.resources.IResource;
 import org.eclipse.core.runtime.CoreException;
+import org.eclipse.debug.core.DebugPlugin;
+import org.eclipse.debug.core.ILaunchConfiguration;
+import org.eclipse.debug.core.ILaunchConfigurationType;
+import org.eclipse.debug.core.ILaunchConfigurationWorkingCopy;
+import org.eclipse.debug.core.ILaunchManager;
 import org.eclipse.jface.dialogs.MessageDialog;
 import org.eclipse.jface.viewers.ISelection;
 import org.eclipse.jface.viewers.ITreeSelection;
@@ -25,11 +31,115 @@ public class ExecMavenHelperHandler extends AbstractHandler {
 				.findView("org.eclipse.ui.navigator.ProjectExplorer");
 	}
 
+	public void launchMavenGoals(IProject project) {
+		try {
+			// Get the launch manager
+			ILaunchManager launchManager = DebugPlugin.getDefault().getLaunchManager();
+
+			// Get the Maven launch config type
+			ILaunchConfigurationType mavenType = launchManager
+					.getLaunchConfigurationType("org.eclipse.m2e.Maven2LaunchConfigurationType");
+
+			// Create a working copy
+			String configName = project.getName() + " - clean install";
+			ILaunchConfigurationWorkingCopy workingCopy = mavenType.newInstance(null,
+					launchManager.generateLaunchConfigurationName(configName));
+
+			// Set required attributes
+			workingCopy.setAttribute("org.eclipse.jdt.launching.WORKING_DIRECTORY", project.getLocation().toOSString());
+			workingCopy.setAttribute("org.eclipse.m2e.MAVEN_GOALS", "clean install");
+			workingCopy.setAttribute("org.eclipse.m2e.PROFILES", "");
+			workingCopy.setAttribute("org.eclipse.debug.ui.ATTR_CAPTURE_OUTPUT", true);
+			workingCopy.setAttribute("org.eclipse.m2e.MAVEN_PROJECT_NAME", project.getName());
+
+			// Save and launch
+			ILaunchConfiguration configuration = workingCopy.doSave();
+			configuration.launch(ILaunchManager.RUN_MODE, null);
+
+		} catch (CoreException e) {
+			e.printStackTrace();
+		}
+	}
+
+	public void launchMavenGoals(IResource project) {
+		try {
+			// Get the launch manager
+			ILaunchManager launchManager = DebugPlugin.getDefault().getLaunchManager();
+
+			String configName = "MavenRunHelper - " + project.getProject().getName() + " - clean install";
+
+			ILaunchConfiguration launchConfiguration = null;
+
+			// Get the Maven launch config type
+			ILaunchConfigurationType mavenType = launchManager
+					.getLaunchConfigurationType("org.eclipse.m2e.Maven2LaunchConfigurationType");
+
+			ILaunchConfiguration[] configurations = launchManager.getLaunchConfigurations(); // mavenType.getPrototypes();
+			if (configurations != null) {
+				for (ILaunchConfiguration configuration : configurations) {
+					if (configName.equals(configuration.getName())) {
+						launchConfiguration = configuration;
+						ILaunchConfigurationWorkingCopy workingCopy = launchConfiguration.getWorkingCopy();
+						workingCopy.setAttribute("org.eclipse.jdt.launching.WORKING_DIRECTORY",
+								project.getParent().getLocation().toOSString());
+						launchConfiguration = workingCopy.doSave();
+						break;
+					}
+				}
+			}
+
+			if (launchConfiguration == null) {
+				// Create a working copy
+				ILaunchConfigurationWorkingCopy workingCopy = mavenType.newInstance(null,
+						launchManager.generateLaunchConfigurationName(configName));
+
+				// Set required attributes
+				workingCopy.setAttribute("org.eclipse.jdt.launching.WORKING_DIRECTORY",
+						project.getParent().getLocation().toOSString());
+				workingCopy.setAttribute("M2_GOALS", "clean install");
+				workingCopy.setAttribute("M2_SKIP_TESTS", true);
+				workingCopy.setAttribute("org.eclipse.m2e.PROFILES", "");
+				workingCopy.setAttribute("org.eclipse.debug.ui.ATTR_CAPTURE_OUTPUT", true);
+				workingCopy.setAttribute("org.eclipse.m2e.MAVEN_PROJECT_NAME", project.getName());
+
+				// Save and launch
+				launchConfiguration = workingCopy.doSave();
+			}
+
+			launchConfiguration.launch(ILaunchManager.RUN_MODE, null);
+
+		} catch (CoreException e) {
+			e.printStackTrace();
+		}
+	}
+
 	private void processSelection(ExecutionEvent event, ITreeSelection selection, Object selectedItem)
 			throws CoreException {
 		IResource pom = findPomToProcess(event, selection, selectedItem);
 		if (pom != null) {
 			MyLogger.logInfo("file:" + pom);
+			MyLogger.logInfo("pom.getProject():" + pom.getProject());
+			MyLogger.logInfo("pom.getProject().getClass():" + pom.getProject().getClass());
+//			IMavenProjectFacade facade = MavenPlugin.getMavenProjectRegistry().getProject(pom.getProject());
+//			if (facade == null) {
+//				System.out.println("Not a Maven project or M2E not active");
+//				return;
+//			}
+
+			launchMavenGoals(pom);
+
+//			ExecutePomAction mavenAction = new ExecutePomAction();
+//			// Wrap the pom.xml file in a selection
+//			ISelection pomSelection = new StructuredSelection(pom);
+//
+//			// The goals to run (e.g., clean install)
+//			String[] goals = new String[] { "clean", "install" };
+//
+//			// Optional: set offline, update snapshots, etc.
+//			boolean offline = false;
+//			boolean updateSnapshots = false;
+//
+//			mavenAction.launch(pomSelection, goals, offline, updateSnapshots);
 		}
 	}
 
@@ -70,8 +180,7 @@ public class ExecMavenHelperHandler extends AbstractHandler {
 					try {
 						processSelection(event, (ITreeSelection) selection, iterator.next());
 					} catch (CoreException e) {
-						// TODO Auto-generated catch block
-						e.printStackTrace();
+						throw new ExecutionException(e.getMessage(), e);
 					}
 				}
 			}
