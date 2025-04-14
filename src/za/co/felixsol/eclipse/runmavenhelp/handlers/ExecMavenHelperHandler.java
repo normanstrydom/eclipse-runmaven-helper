@@ -117,29 +117,7 @@ public class ExecMavenHelperHandler extends AbstractHandler {
 			throws CoreException {
 		IResource pom = findPomToProcess(event, selection, selectedItem);
 		if (pom != null) {
-			MyLogger.logInfo("file:" + pom);
-			MyLogger.logInfo("pom.getProject():" + pom.getProject());
-			MyLogger.logInfo("pom.getProject().getClass():" + pom.getProject().getClass());
-//			IMavenProjectFacade facade = MavenPlugin.getMavenProjectRegistry().getProject(pom.getProject());
-//			if (facade == null) {
-//				System.out.println("Not a Maven project or M2E not active");
-//				return;
-//			}
-
 			launchMavenGoals(pom);
-
-//			ExecutePomAction mavenAction = new ExecutePomAction();
-//			// Wrap the pom.xml file in a selection
-//			ISelection pomSelection = new StructuredSelection(pom);
-//
-//			// The goals to run (e.g., clean install)
-//			String[] goals = new String[] { "clean", "install" };
-//
-//			// Optional: set offline, update snapshots, etc.
-//			boolean offline = false;
-//			boolean updateSnapshots = false;
-//
-//			mavenAction.launch(pomSelection, goals, offline, updateSnapshots);
 		}
 	}
 
@@ -170,7 +148,6 @@ public class ExecMavenHelperHandler extends AbstractHandler {
 
 	@Override
 	public Object execute(ExecutionEvent event) throws ExecutionException {
-
 		IViewPart viewPart = getProjectExplorerView();
 		if (viewPart != null) {
 			ISelection selection = viewPart.getSite().getSelectionProvider().getSelection();
